@@ -1,0 +1,19 @@
+.mp-container {
+    align-items: center;
+}
+
+.mp-info {
+    margin-left: auto;
+}
+
+.mp-icon {
+    margin-right: 4px;
+}
+
+.mp-chip {
+    color: rgb(29, 116, 222);
+    background-color: rgb(189, 203, 248);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: bold;
+}

@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "MagicPaste for Webflow",
+  "version": "0.1.0",
+  "description": "MagicPaste",
+  "icons": {
+    "16": "icons/16px.png",
+    "24": "icons/24px.png",
+    "32": "icons/32px.png",
+    "48": "icons/48px.png",
+    "64": "icons/64px.png",
+    "128": "icons/128px.png"
+  },
+  "browser_action": {
+    "default_title": "MagicPaste"
+  },
+  "permissions": [
+    "clipboardRead",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://*.webflow.com/*",
+    "https://webflow.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://*.webflow.com/*"],
+      "run_at": "document_idle",
+      "js": ["contentScript.js"],
+      "css": ["magicpaste.css"]
+    }
+  ]
+}
