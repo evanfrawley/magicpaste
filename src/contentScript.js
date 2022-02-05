@@ -64,7 +64,7 @@ async function runMagicPaste() {
 
         items = items
           .filter(item => item.tagName.toLowerCase() !== 'meta')
-          .slice(1)
+          .slice(1) // get rid of the magicpaste
 
         const formattedHTMLStrings = []
         for (let i = 0; i < items.length; i++) {
@@ -72,7 +72,7 @@ async function runMagicPaste() {
           let str
           const name = item.tagName.toLowerCase()
           if (name === 'p' || name === 'div') {
-            str = await formatMarkdownToHTML(item.innerHTML)
+            str = await formatMarkdownToHTML(item.textContent)
           } else {
             str = item.outerHTML
           }
