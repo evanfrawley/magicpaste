@@ -3,11 +3,16 @@
 }
 
 .mp-info {
+    max-width: 75%;
     margin-left: auto;
 }
 
-.mp-icon {
-    margin-right: 4px;
+.mp-link {
+    color: rgb(29, 116, 222);
+}
+
+.mp-link:visited {
+    color: rgb(29, 116, 222);
 }
 
 .mp-chip {

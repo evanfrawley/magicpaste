@@ -5,39 +5,87 @@ import remarkParse from 'remark-parse'
 import remarkHtml from 'remark-html'
 
 const magicPasteString = '@magicpaste\n'
+const magicPasteRegex = /^@magicpaste\s*/
+const magicPasteStringNoNewLine = '@magicpaste'
 const TYPE_HTML = 'text/html'
 const TYPE_PLAIN = 'text/plain'
 
-setInterval(async () => {
-  try {
-    const clipboardItems = await navigator.clipboard.read();
-    for (const clipboardItem of clipboardItems) {
-      for (const type of clipboardItem.types) {
-        const blob = await clipboardItem.getType(type);
-        const text = await blob.text()
+async function formatMarkdownToHTML(text) {
+  const magicPasteContents = text.replace(magicPasteRegex, '').replace(/\u00A0\//g, ' ')
+  const formattedText = await unified()
+    .use(remarkParse)
+    .use(remarkHtml)
+    .process(magicPasteContents)
 
-        if (type === TYPE_PLAIN && text.startsWith(magicPasteString)) {
-          const magicPasteContents = text.replace(magicPasteString, '')
-          const file = await unified()
-            .use(remarkParse)
-            .use(remarkHtml, { sanitize: true })
-            .process(magicPasteContents)
+  // properly format block quotes
+  const htmlString = formattedText.value
+    .replace(/<blockquote>\n<p>/g, '<blockquote>')
+    .replace(/<\/p>\n<\/blockquote>/g, '</blockquote>')
+    .replace(/\u00A0\//g, ' ')
 
-          // properly format block quotes
-          const htmlString = file.value
-            .replace(/<blockquote>\n<p>/g, '<blockquote>')
-            .replace(/<\/p>\n<\/blockquote>/g, '</blockquote>')
+  return htmlString
+}
 
-          const newBlob = new Blob([htmlString], { type: TYPE_HTML });
-          const data = [new ClipboardItem({ [TYPE_HTML]: newBlob })];
-          await navigator.clipboard.write(data)
+async function saveToClipboard(str) {
+  const newBlob = new Blob([str], { type: TYPE_HTML });
+  const data = [new ClipboardItem({ [TYPE_HTML]: newBlob })];
+  await navigator.clipboard.write(data)
+}
+
+async function runMagicPaste() {
+  const clipboardItems = await navigator.clipboard.read();
+  for (const clipboardItem of clipboardItems) {
+    for (const type of clipboardItem.types) {
+      const blob = await clipboardItem.getType(type);
+      const text = await blob.text()
+
+      if (type === TYPE_PLAIN && magicPasteRegex.test(text)) {
+        const htmlString = await formatMarkdownToHTML(text)
+        await saveToClipboard(htmlString)
+      } else if (type === TYPE_HTML) {
+        const parser = new DOMParser()
+        const htmlDoc = parser.parseFromString(text, TYPE_HTML)
+        const body = htmlDoc.querySelector('body')
+
+        if (!body.textContent.startsWith(magicPasteStringNoNewLine)) return
+
+        let items = []
+        if (body.children.length >= 2) {
+          items = Array.from(body.children)
+        } else if (
+          body.children.length === 1 &&
+          body.children[0].tagName.toLowerCase() === 'div' &&
+          body.children[0].children.length >= 2
+        ) {
+          items = Array.from(body.children[0].children)
+        } else {
+          return
         }
+
+        items = items
+          .filter(item => item.tagName.toLowerCase() !== 'meta')
+          .slice(1)
+
+        const formattedHTMLStrings = []
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i]
+          let str
+          const name = item.tagName.toLowerCase()
+          if (name === 'p' || name === 'div') {
+            str = await formatMarkdownToHTML(item.innerHTML)
+          } else {
+            str = item.outerHTML
+          }
+          formattedHTMLStrings.push(str)
+        }
+
+        if (formattedHTMLStrings.length === 0) return
+
+        await saveToClipboard(formattedHTMLStrings.join('\n'))
       }
     }
-  } catch (err) {
-    // noop
   }
-}, 100)
+}
 
 // Create loop to add buttons into the DOM
 setInterval(() => {
@@ -50,8 +98,10 @@ setInterval(() => {
     infoContainer.classList.add('mp-container')
     const maybeButton = Array.from(infoContainer.children).find(el => el.classList.contains('mp-info'))
     if (!maybeButton) {
+      item.addEventListener('click', runMagicPaste)
+      item.addEventListener('copy', runMagicPaste)
       const info = document.createElement('div')
-      info.innerHTML = 'When pasting Markdown from another file, make sure the contents start with <span class="mp-chip">@magicpaste</span> on its own line'
+      info.innerHTML = 'When pasting Markdown, make sure the contents start with <span class="mp-chip">@magicpaste</span> on its own line. <a class="mp-link" href="https://fake.so/magicpaste" target="_blank">Learn More</a>'
       info.classList.add('mp-info')
       infoContainer.appendChild(info)
     }
