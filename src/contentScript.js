@@ -11,7 +11,7 @@ const TYPE_HTML = 'text/html'
 const TYPE_PLAIN = 'text/plain'
 
 async function formatMarkdownToHTML(text) {
-  const magicPasteContents = text.replace(magicPasteRegex, '').replace(/\u00A0\//g, ' ')
+  const magicPasteContents = text.replace(/\u00A0\//g, ' ').replace(magicPasteRegex, '')
   const formattedText = await unified()
     .use(remarkParse)
     .use(remarkHtml)

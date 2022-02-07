@@ -14,10 +14,7 @@
   "browser_action": {
     "default_title": "MagicPaste"
   },
-  "permissions": [
-    "clipboardRead",
-    "clipboardWrite"
-  ],
+  "permissions": [],
   "host_permissions": [
     "https://*.webflow.com/*",
     "https://webflow.com/*"
