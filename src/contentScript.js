@@ -100,6 +100,7 @@ setInterval(() => {
     if (!maybeButton) {
       item.addEventListener('click', runMagicPaste)
       item.addEventListener('copy', runMagicPaste)
+      item.addEventListener('focus', runMagicPaste)
       const info = document.createElement('div')
       info.innerHTML = 'When pasting Markdown, make sure the contents start with <span class="mp-chip">@magicpaste</span> on its own line. <a class="mp-link" href="https://fake.so/magicpaste" target="_blank">Learn More</a>'
       info.classList.add('mp-info')
@@ -107,3 +108,5 @@ setInterval(() => {
     }
   })
 }, 1000)
+
+window.addEventListener('focus', runMagicPaste)
